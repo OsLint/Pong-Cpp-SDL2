@@ -1,12 +1,10 @@
 #include "Player.h"
-#include <iostream>
 
-const int SCREEN_WIDTH = 800;
-const int SCREEN_HEIGHT = 640;
 const int PLAYER_MOVEMENT_SPEED = 4;
 
-Player::Player() : isMoving(false){
-    std::cout << "Player created" << std::endl;
+Player::Player(int screenWidth, int screenHeight) : isMoving(false),SCREEN_WIDTH(screenWidth), SCREEN_HEIGHT(screenHeight){
+    velocity.x = 0;
+    velocity.y = 0;
 }
 
 void Player::render(SDL_Renderer *renderer) {
@@ -47,9 +45,6 @@ void Player::move(bool up) {
     //change the velocity of the paddle
     velocity.y = up ? -PLAYER_MOVEMENT_SPEED : PLAYER_MOVEMENT_SPEED;
 
-
-
-    std::cout << "Player moving" << std::endl;
 }
 
 void Player::stopMoving() {

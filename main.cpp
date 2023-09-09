@@ -14,6 +14,12 @@ int main() {
         return 1;
     }
 
+    if (TTF_Init() == -1) {
+        std::cerr << "TTF_Init() failed: " << TTF_GetError() << std::endl;
+        // Handle initialization failure
+        return 1;
+    }
+
     Game game;
     game.initialize();
 
