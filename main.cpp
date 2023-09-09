@@ -1,4 +1,6 @@
 #include <iostream>
+
+
 #include "SDL.h"
 #include "Game.h"
 
@@ -14,6 +16,7 @@ int main() {
         return 1;
     }
 
+    // Initialize SDL_ttf
     if (TTF_Init() == -1) {
         std::cerr << "TTF_Init() failed: " << TTF_GetError() << std::endl;
         // Handle initialization failure
@@ -21,7 +24,11 @@ int main() {
     }
 
     Game game;
-    game.initialize();
+    int initGaame = game.initialize();
+    if(initGaame != 0){
+        std::cout << "Game could not be initialized!" << std::endl;
+        return 1;
+    }
 
     SDL_Event e; // Create an SDL event to handle events
 

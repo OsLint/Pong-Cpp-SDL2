@@ -8,13 +8,15 @@ public:
 
     ~Game() = default;
 
-    void initialize();
+    int initialize();
 
     void cleanup();
 
     void handleEvents(SDL_Event &e);
 
     void update();
+
+
 
     void render();
 
@@ -43,11 +45,10 @@ private:
     Player player1 = Player(SCREEN_WIDTH, SCREEN_HEIGHT);
     Player player2 = Player(SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    TTF_Font *font = TTF_OpenFont("../arial.ttf", 24);
-    SDL_Color textColor = {0, 0, 0, 255};
-    SDL_Surface *textSurface = TTF_RenderText_Solid(font, "Hello World!", textColor);
-    SDL_Texture *text = SDL_CreateTextureFromSurface(renderer, textSurface);
-    SDL_Rect textRect = {0, 0, 100, 100};
+    SDL_Texture *textTexture;
+    TTF_Font *font;
+    SDL_Surface *textSurface;
+    SDL_Rect textRect;
 
 
     int player1score;

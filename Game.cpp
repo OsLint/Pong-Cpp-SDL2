@@ -3,13 +3,13 @@
 #include "Game.h"
 
 
-Ball ball(Game::SCREEN_WIDTH,Game::SCREEN_HEIGHT);
+Ball ball(Game::SCREEN_WIDTH, Game::SCREEN_HEIGHT);
 
 Game::Game() : window(nullptr), renderer(nullptr), isRunning(false) {
-
 }
 
-void Game::initialize() {
+int Game::initialize() {
+
     window = SDL_CreateWindow("Pong in SDL2",
                               SDL_WINDOWPOS_UNDEFINED,
                               SDL_WINDOWPOS_UNDEFINED,
@@ -18,26 +18,54 @@ void Game::initialize() {
     if (!window) {
         std::cout << "Window could not be created!" << std::endl
                   << "SDL_Error: " << SDL_GetError() << std::endl;
+        return 1;
     } else {
         renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
         if (!renderer) {
             std::cout << "Renderer could not be created!" << std::endl
                       << "SDL_Error: " << SDL_GetError() << std::endl;
+            return 1;
         } else {
             isRunning = true;
             player1.innit(true);
             player2.innit(false);
             ball.innit();
+
+            font = TTF_OpenFont("../resources/arial.ttf", 50);
+            if (!font) {
+                std::cout << "TTF_OpenFont() failed: " << TTF_GetError() << std::endl;
+            }
+
+            SDL_Color textColor = {0, 0, 0, 0xFF}; // Adjust the text color as needed
+            textSurface = TTF_RenderText_Solid(font, "PONG IN SDL2!", textColor);
+            if (!textSurface) {
+                std::cout << "TTF_RenderText_Solid() failed: " << TTF_GetError() << std::endl;
+                return 1;
+            }
+
+            // Create text texture
+            textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+            if (!textTexture) {
+                std::cout << "SDL_CreateTextureFromSurface() failed: " << SDL_GetError() << std::endl;
+                return 1;
+            }
+
+            // Calculate the centered position for the text horizontally
+            int textWidth = textSurface->w;
+            int centerX = (SCREEN_WIDTH - textWidth) / 2;
+            textRect = {centerX, 0, textWidth, textSurface->h};
+
         }
     }
+    return 0;
 }
 
 void Game::cleanup() {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
-    TTF_CloseFont(font);
     SDL_FreeSurface(textSurface);
-    SDL_DestroyTexture(text);
+    SDL_DestroyTexture(textTexture);
+    TTF_CloseFont(font);
     TTF_Quit();
 }
 
@@ -85,11 +113,11 @@ void Game::update() {
     player1.update();
     player2.update();
 
-    if(checkForPaddleCollision(player1.getPaddle()) ||
+    if (checkForPaddleCollision(player1.getPaddle()) ||
         checkForPaddleCollision(player2.getPaddle())) {
         int curXVelocity = ball.getVelocity().x;
         ball.setVelocity({-curXVelocity, ball.getVelocity().y});
-    }else {
+    } else {
         checkForWallCollision();
     }
     ball.update();
@@ -105,7 +133,7 @@ void Game::render() {
     player1.render(renderer);
     player2.render(renderer);
     ball.render(renderer);
-    //renderText();
+    renderText();
 }
 
 
@@ -144,6 +172,44 @@ void Game::checkForWallCollision() {
 }
 
 void Game::renderText() {
-    SDL_RenderCopy(renderer, text, NULL, &textRect);
-    SDL_RenderPresent(renderer);
+    SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF);
+
+    // Convert player scores to strings
+    std::string player1ScoreStr =  std::to_string(getPlayer1Score());
+    std::string player2ScoreStr =  std::to_string(getPlayer2Score());
+
+    // Combine the scores with the main text
+    std::string combinedText = player1ScoreStr + " : " + player2ScoreStr;
+
+    // Create a new text surface with the combined text
+    SDL_Surface* newTextSurface = TTF_RenderText_Solid(font, combinedText.c_str(), {0, 0, 0, 0xFF});
+    if (!newTextSurface) {
+        std::cout << "TTF_RenderText_Solid() failed: " << TTF_GetError() << std::endl;
+        return;
+    }
+
+    // Create a new texture from the updated surface
+    SDL_Texture* newTextTexture = SDL_CreateTextureFromSurface(renderer, newTextSurface);
+    if (!newTextTexture) {
+        std::cout << "SDL_CreateTextureFromSurface() failed: " << SDL_GetError() << std::endl;
+        SDL_FreeSurface(newTextSurface);
+        return;
+    }
+
+    // Set the position for the updated text
+    int textWidth = newTextSurface->w;
+    int centerX = (SCREEN_WIDTH - textWidth) / 2;
+    textRect = {centerX, 0, textWidth, newTextSurface->h};
+
+    // Render the updated text
+    SDL_RenderCopy(renderer, newTextTexture, NULL, &textRect);
+
+    // Clean up the old text surface and texture
+    SDL_FreeSurface(textSurface);
+    SDL_DestroyTexture(textTexture);
+
+    // Update the text surface and texture
+    textSurface = newTextSurface;
+    textTexture = newTextTexture;
 }
+
